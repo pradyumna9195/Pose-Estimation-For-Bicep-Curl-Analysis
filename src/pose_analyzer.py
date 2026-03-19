@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 from typing import Any, Dict, Optional, Tuple
 
 import cv2
@@ -27,10 +28,21 @@ class PoseAnalyzer:
             self.mp_pose = mp.solutions.pose
             self.mp_drawing = mp.solutions.drawing_utils
         else:
-            from mediapipe.python.solutions import drawing_utils, pose
+            self.mp_pose = None
+            self.mp_drawing = None
 
-            self.mp_pose = pose
-            self.mp_drawing = drawing_utils
+            try:
+                self.mp_pose = importlib.import_module("mediapipe.solutions.pose")
+                self.mp_drawing = importlib.import_module("mediapipe.solutions.drawing_utils")
+            except ModuleNotFoundError:
+                try:
+                    self.mp_pose = importlib.import_module("mediapipe.python.solutions.pose")
+                    self.mp_drawing = importlib.import_module("mediapipe.python.solutions.drawing_utils")
+                except ModuleNotFoundError as error:
+                    raise ImportError(
+                        "Incompatible MediaPipe installation detected. "
+                        "This app requires MediaPipe Solutions API (e.g., mediapipe==0.10.21)."
+                    ) from error
         self.pose = self.mp_pose.Pose(
             min_detection_confidence=POSE_MIN_DETECTION_CONFIDENCE,
             min_tracking_confidence=POSE_MIN_TRACKING_CONFIDENCE,
