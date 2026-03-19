@@ -1,7 +1,6 @@
 import os
 import tempfile
 import threading
-import time
 from typing import Any
 
 import av
@@ -203,12 +202,10 @@ def main() -> None:
 
         metrics_placeholder = st.empty()
         if webrtc_ctx.state.playing and webrtc_ctx.video_processor:
-            while webrtc_ctx.state.playing:
-                snapshot = webrtc_ctx.video_processor.get_snapshot()
-                update_session_from_snapshot(snapshot)
-                with metrics_placeholder.container():
-                    render_metrics(st.session_state.last_metrics)
-                time.sleep(0.2)
+            snapshot = webrtc_ctx.video_processor.get_snapshot()
+            update_session_from_snapshot(snapshot)
+            with metrics_placeholder.container():
+                render_metrics(st.session_state.last_metrics)
         elif st.session_state.last_metrics:
             with metrics_placeholder.container():
                 render_metrics(st.session_state.last_metrics)
