@@ -51,18 +51,40 @@ class PoseAnalyzer:
             return 0.0
         return float(np.linalg.norm(np.array(elbow_position) - np.array(prev_elbow_position)))
 
+    @staticmethod
+    def _fit_font_scale(
+        text: str,
+        max_width: int,
+        font: int = cv2.FONT_HERSHEY_SIMPLEX,
+        default_scale: float = 0.8,
+        thickness: int = 2,
+        min_scale: float = 0.45,
+    ) -> float:
+        scale = default_scale
+        while scale > min_scale:
+            text_width = cv2.getTextSize(text, font, scale, thickness)[0][0]
+            if text_width <= max_width:
+                return scale
+            scale -= 0.05
+        return min_scale
+
     def process_frame(self, frame_bgr: np.ndarray, state: CurlSessionState) -> tuple[np.ndarray, Dict[str, Any]]:
         image_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         results = self.pose.process(image_rgb)
         image = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
+        frame_height, frame_width = image.shape[:2]
+        text_x = 20
+        max_text_width = max(frame_width - (2 * text_x), 100)
 
         if not results.pose_landmarks:
+            no_pose_text = "No pose detected. Ensure your upper body is visible."
+            no_pose_scale = self._fit_font_scale(no_pose_text, max_text_width, default_scale=0.8, thickness=2)
             cv2.putText(
                 image,
-                "No pose detected. Ensure your upper body is visible.",
-                (20, 50),
+                no_pose_text,
+                (text_x, 50),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.8,
+                no_pose_scale,
                 BAD_COLOR,
                 2,
                 cv2.LINE_AA,
@@ -117,34 +139,50 @@ class PoseAnalyzer:
             state.reps_data = state.reps_data[-MAX_HISTORY_POINTS:]
 
         self.mp_drawing.draw_landmarks(image, results.pose_landmarks, self.mp_pose.POSE_CONNECTIONS)
-        cv2.putText(image, f"Elbow Angle: {int(angle)}", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, FRAME_TEXT_COLOR, 2, cv2.LINE_AA)
+
+        angle_text = f"Elbow Angle: {int(angle)}"
+        angle_scale = self._fit_font_scale(angle_text, max_text_width, default_scale=0.8, thickness=2)
+        stability_scale = self._fit_font_scale(stability_feedback, max_text_width, default_scale=0.8, thickness=2)
+        feedback_scale = self._fit_font_scale(angle_feedback, max_text_width, default_scale=0.8, thickness=2)
+        stage_text = f"Stage: {state.stage}"
+        stage_scale = self._fit_font_scale(stage_text, max_text_width, default_scale=0.8, thickness=2)
+        reps_text = f"Reps: {state.counter}"
+        reps_scale = self._fit_font_scale(reps_text, max_text_width, default_scale=0.8, thickness=2)
+
+        y1 = max(int(frame_height * 0.08), 35)
+        y2 = y1 + max(int(frame_height * 0.08), 32)
+        y3 = y2 + max(int(frame_height * 0.08), 32)
+        y4 = y3 + max(int(frame_height * 0.08), 32)
+        y5 = y4 + max(int(frame_height * 0.08), 32)
+
+        cv2.putText(image, angle_text, (text_x, y1), cv2.FONT_HERSHEY_SIMPLEX, angle_scale, FRAME_TEXT_COLOR, 2, cv2.LINE_AA)
         cv2.putText(
             image,
             stability_feedback,
-            (50, 100),
+            (text_x, y2),
             cv2.FONT_HERSHEY_SIMPLEX,
-            1,
+            stability_scale,
             BAD_COLOR if "moving too much" in stability_feedback else GOOD_COLOR,
             2,
             cv2.LINE_AA,
         )
-        cv2.putText(image, angle_feedback, (50, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, INFO_COLOR, 2, cv2.LINE_AA)
+        cv2.putText(image, angle_feedback, (text_x, y3), cv2.FONT_HERSHEY_SIMPLEX, feedback_scale, INFO_COLOR, 2, cv2.LINE_AA)
         cv2.putText(
             image,
-            f"Stage: {state.stage}",
-            (50, 200),
+            stage_text,
+            (text_x, y4),
             cv2.FONT_HERSHEY_SIMPLEX,
-            1,
+            stage_scale,
             FRAME_TEXT_COLOR,
             2,
             cv2.LINE_AA,
         )
         cv2.putText(
             image,
-            f"Reps: {state.counter}",
-            (50, 250),
+            reps_text,
+            (text_x, y5),
             cv2.FONT_HERSHEY_SIMPLEX,
-            1,
+            reps_scale,
             FRAME_TEXT_COLOR,
             2,
             cv2.LINE_AA,
