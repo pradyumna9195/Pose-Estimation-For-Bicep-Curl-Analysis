@@ -30,6 +30,8 @@ This project has been migrated from a Jupyter notebook into a deployable real-ti
 .
 ├── app.py
 ├── requirements.txt
+├── runtime.txt
+├── packages.txt
 ├── .streamlit/
 │ └── config.toml
 ├── src/
@@ -90,16 +92,6 @@ Plain Streamlit server-side camera capture (`cv2.VideoCapture(0)`) does not acce
 - HTTPS is required in most browsers for camera access.
 - Users must allow webcam permission.
 - STUN/TURN/network restrictions may affect stream startup in some networks.
-
-Default STUN used in app:
-
-- `stun:stun.l.google.com:19302`
-
-## Browser Compatibility
-
-- Recommended: latest Chrome or Edge
-- Also supported: Firefox
-- Safari may have stricter behavior depending on OS/browser version
 
 ## Troubleshooting
 
