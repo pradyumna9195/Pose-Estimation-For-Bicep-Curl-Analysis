@@ -25,24 +25,6 @@ This project has been migrated from a Jupyter notebook into a deployable real-ti
 - Matplotlib
 - Pandas
 
-## Project Structure
-
-.
-├── app.py
-├── requirements.txt
-├── runtime.txt
-├── packages.txt
-├── .streamlit/
-│ └── config.toml
-├── src/
-│ ├── **init**.py
-│ ├── config.py
-│ ├── state.py
-│ ├── feedback.py
-│ ├── pose_analyzer.py
-│ └── analytics.py
-├── Pose_Bicep_Curl3.ipynb
-└── README.md
 
 ## Local Setup
 
