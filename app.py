@@ -1,6 +1,9 @@
 import os
+import platform
 import tempfile
 import threading
+import time
+from importlib import metadata
 from typing import Any
 
 import av
@@ -95,6 +98,54 @@ def render_metrics(metrics: dict[str, Any]) -> None:
     st.write(metrics.get("feedback") or "")
 
 
+def _get_installed_version(package_name: str) -> str | None:
+    try:
+        return metadata.version(package_name)
+    except metadata.PackageNotFoundError:
+        return None
+
+
+def render_startup_self_check() -> None:
+    expected_versions = {
+        "streamlit": "1.44.1",
+        "streamlit-webrtc": "0.62.4",
+        "mediapipe": "0.10.21",
+        "opencv-python-headless": "4.11.0.86",
+        "av": "14.2.0",
+        "aiortc": "1.11.0",
+        "aioice": "0.10.2",
+    }
+    rows: list[tuple[str, str | None, str]] = []
+    has_drift = False
+
+    for package_name, expected in expected_versions.items():
+        installed = _get_installed_version(package_name)
+        status = "✅"
+        if installed is None:
+            status = "❌ missing"
+            has_drift = True
+        elif installed != expected:
+            status = "⚠️ drift"
+            has_drift = True
+        rows.append((package_name, installed, f"{status} (expected {expected})"))
+
+    with st.expander("Startup self-check", expanded=False):
+        st.write(f"Python: {platform.python_version()}")
+        st.write(f"Platform: {platform.system()} {platform.release()}")
+        st.table(
+            {
+                "package": [row[0] for row in rows],
+                "installed": [row[1] if row[1] is not None else "-" for row in rows],
+                "status": [row[2] for row in rows],
+            }
+        )
+
+        if has_drift:
+            st.warning("Environment drift detected. Rebuild/redeploy recommended.")
+        else:
+            st.success("Environment matches pinned versions.")
+
+
 def process_uploaded_video(temp_path: str) -> None:
     cap = cv2.VideoCapture(temp_path)
     analyzer = PoseAnalyzer()
@@ -184,6 +235,7 @@ def main() -> None:
         if st.button("Reset Session Data"):
             reset_session_data()
             st.success("Session data cleared")
+        render_startup_self_check()
 
     live_tab, upload_tab, analytics_tab = st.tabs(["Live Camera", "Upload Video", "Analytics"])
 
@@ -206,6 +258,8 @@ def main() -> None:
             update_session_from_snapshot(snapshot)
             with metrics_placeholder.container():
                 render_metrics(st.session_state.last_metrics)
+            time.sleep(0.2)
+            st.rerun()
         elif st.session_state.last_metrics:
             with metrics_placeholder.container():
                 render_metrics(st.session_state.last_metrics)
