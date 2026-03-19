@@ -1,12 +1,124 @@
-# Bicep Curl Analysis
-<img width="1223" height="750" alt="goodformcurlingup" src="https://github.com/user-attachments/assets/5dee855a-5d10-4fb9-a39d-0a33b146cf56" />
-<img width="1223" height="749" alt="goodformcurlingdown" src="https://github.com/user-attachments/assets/e586d7c9-3e38-44d6-b471-6400498393e7" />
-<img width="1223" height="748" alt="goodform" src="https://github.com/user-attachments/assets/6ec18719-7ed2-4561-a55c-13a2e542f4a5" />
-<img width="1223" height="750" alt="badformelbownotstable2" src="https://github.com/user-attachments/assets/e2d2828e-d311-4753-a22b-d0ee5ace7b5b" />
-<img width="1223" height="748" alt="badformelbownotstable" src="https://github.com/user-attachments/assets/45a2f444-984f-4b69-89d5-b2c8080a3ad9" />
-<img width="1214" height="658" alt="angleOverTime" src="https://github.com/user-attachments/assets/57a690f3-7f13-4385-9b57-08f0e8554efc" />
-<img width="1248" height="672" alt="image" src="https://github.com/user-attachments/assets/c52cd37d-87ce-47e2-b4b2-9842fcc15c78" />
-<img width="1320" height="695" alt="image" src="https://github.com/user-attachments/assets/eee5bad7-3f7e-478b-b705-416bd4efbe9a" />
+# Bicep Curl Analysis App
 
+This project has been migrated from a Jupyter notebook into a deployable real-time Streamlit application using `streamlit-webrtc` for browser webcam support.
 
+## Features
 
+- Real-time webcam bicep curl analysis
+- Elbow angle detection and curl stage tracking
+- Repetition counting (`down -> up` transition)
+- Elbow stability feedback based on movement threshold
+- Upload-video fallback mode for non-WebRTC environments
+- Analytics dashboard:
+  - Angle over time
+  - Stability histogram
+  - Angle vs stability scatter plot
+- CSV export of session data
+
+## Tech Stack
+
+- Streamlit
+- streamlit-webrtc
+- MediaPipe Pose
+- OpenCV
+- NumPy
+- Matplotlib
+- Pandas
+
+## Project Structure
+
+.
+├── app.py
+├── requirements.txt
+├── .streamlit/
+│ └── config.toml
+├── src/
+│ ├── **init**.py
+│ ├── config.py
+│ ├── state.py
+│ ├── feedback.py
+│ ├── pose_analyzer.py
+│ └── analytics.py
+├── Pose_Bicep_Curl3.ipynb
+└── README.md
+
+## Local Setup
+
+1. Create and activate a virtual environment.
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Run the app:
+
+```bash
+streamlit run app.py
+```
+
+4. Open the URL shown by Streamlit (usually `http://localhost:8501`).
+
+## Usage
+
+### Live Camera
+
+1. Open **Live Camera** tab.
+2. Allow browser webcam permission.
+3. Start the stream.
+4. View real-time overlays: angle, stage, reps, and feedback.
+
+### Upload Video
+
+1. Open **Upload Video** tab.
+2. Upload an `.mp4`, `.mov`, or `.avi` file.
+3. Click **Process Uploaded Video**.
+
+### Analytics
+
+After a live session or upload run, open **Analytics** tab to view charts and download CSV session data.
+
+## Deployment Notes
+
+### Why `streamlit-webrtc`
+
+Plain Streamlit server-side camera capture (`cv2.VideoCapture(0)`) does not access end-user webcams in hosted deployments.
+`streamlit-webrtc` uses browser WebRTC and supports deployed camera usage.
+
+### Requirements for Camera in Deployment
+
+- HTTPS is required in most browsers for camera access.
+- Users must allow webcam permission.
+- STUN/TURN/network restrictions may affect stream startup in some networks.
+
+Default STUN used in app:
+
+- `stun:stun.l.google.com:19302`
+
+## Browser Compatibility
+
+- Recommended: latest Chrome or Edge
+- Also supported: Firefox
+- Safari may have stricter behavior depending on OS/browser version
+
+## Troubleshooting
+
+- **No camera prompt appears**
+  - Ensure browser permissions are not blocked.
+  - Use HTTPS in deployed environments.
+
+- **No pose detected**
+  - Ensure upper body is visible and lighting is adequate.
+  - Keep camera at chest-to-head framing.
+
+- **WebRTC fails to connect**
+  - Try a different network/browser.
+  - Use Upload Video fallback mode.
+
+- **Low FPS / lag**
+  - Close background apps using camera/CPU.
+  - Use a lower-resolution camera input if available.
+
+## Original Notebook
+
+The original notebook implementation is preserved in `Pose_Bicep_Curl3.ipynb`.

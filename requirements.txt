@@ -1,0 +1,9 @@
+streamlit==1.44.1
+streamlit-webrtc==0.62.4
+mediapipe==0.10.21
+opencv-python-headless==4.11.0.86
+numpy==1.26.4
+pandas==2.2.3
+matplotlib==3.10.1
+av==14.2.0
+aiortc==1.11.0
